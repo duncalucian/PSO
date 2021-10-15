@@ -1,4 +1,4 @@
-#include "threads/init.h"
+#include "init.h"
 #include <console.h>
 #include <debug.h>
 #include <inttypes.h>
@@ -132,8 +132,10 @@ main (void)
   locate_block_devices ();
   filesys_init (format_filesys);
 #endif
+  
 
   printf ("Boot complete.\n");
+ 
   myfunction();
   //printf("This is my first line of code in Pintos");
   /* Run actions specified on kernel command line. */
@@ -143,6 +145,8 @@ main (void)
   shutdown ();
   thread_exit ();
 }
+
+
 
 /* Clear the "BSS", a segment that should be initialized to
    zeros.  It isn't actually stored on disk or zeroed by the

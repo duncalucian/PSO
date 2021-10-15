@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "thread.h": "c",
+        "myheader.h": "c",
+        "print_thread.h": "c",
+        "array": "c",
+        "*.tcc": "c",
+        "memory": "c",
+        "istream": "c",
+        "tuple": "c",
+        "utility": "c"
+    }
+}

@@ -59,6 +59,8 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
 
+int noThreads = 0;
+
 static void kernel_thread (thread_func *, void *aux);
 
 static void idle (void *aux UNUSED);
@@ -70,6 +72,7 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -99,6 +102,7 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 }
+
 
 /* Starts preemptive thread scheduling by enabling interrupts.
    Also creates the idle thread. */
@@ -177,13 +181,14 @@ thread_create (const char *name, int priority,
 
   /* Allocate thread. */
   t = palloc_get_page (PAL_ZERO);
+  
   if (t == NULL)
     return TID_ERROR;
 
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
-
+  t->parentTid = thread_current()->tid;
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack' 
      member cannot be observed. */
@@ -204,10 +209,12 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
+  noThreads++;
   intr_set_level (old_level);
 
   /* Add to run queue. */
   thread_unblock (t);
+
 
   return tid;
 }
@@ -339,10 +346,26 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+void
+thread_foreachReadyList (thread_action_func *func, void *aux)
+{
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  for (e = list_begin (&ready_list); e != list_end (&ready_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, allelem);
+      func (t, aux);
+    }
+}
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
+    
   thread_current ()->priority = new_priority;
 }
 
@@ -566,20 +589,42 @@ schedule (void)
   if (cur != next)
     prev = switch_threads (cur, next);
   thread_schedule_tail (prev);
+
+  printf("Tid next: %d, Tid curr: %d, Tid prev: %d", cur->tid, next->tid, prev->tid);
 }
 
 /* Returns a tid to use for a new thread. */
 static tid_t
 allocate_tid (void) 
 {
-  static tid_t next_tid = 1;
+  static tid_t next_tid = 2;
   tid_t tid;
 
   lock_acquire (&tid_lock);
-  tid = next_tid++;
+  next_tid += 2;
+  tid = next_tid;
   lock_release (&tid_lock);
 
   return tid;
+}
+
+void print_thread_info(struct thread* the_thread){
+    printf("Name: %s, TID: %d, State: %d, Number of threads: %d, Parent tid: %d\n", the_thread->name, the_thread->tid, the_thread->status, noThreads, the_thread->parentTid);
+}
+void display_threads(){
+  intr_disable();
+  printf("Info for all threads! \n");
+  thread_foreach(print_thread_info, NULL);
+  printf("\n\n");
+  intr_enable();
+}
+
+void display_threadsReadyList(){
+  intr_disable();
+  printf("Info for all threads! \n");
+  thread_foreachReadyList(print_thread_info, NULL);
+  printf("\n\n");
+  intr_enable();
 }
 
 /* Offset of `stack' member within `struct thread'.

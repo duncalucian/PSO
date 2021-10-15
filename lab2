@@ -1,0 +1,18 @@
+1.1
+Am rulat cu debugger ul in visual studio punand un break point la inceputul functiei de main. Cu ajutorul comenzii step over am rulat pana am ajuns la printf ul de "Boot complete" de la linia 136.
+
+1.2
+
+Initial se va apelarun_actions care parseaza parametrii din linia de comanda si va executa testul care se cere. Deoarece este comanda run ca parametru se va apela mai apoi metoda run_task() care va rula testul cerute, multiple-alarm.
+
+Testul de multiple alarm este in folderul de tests/threads.
+run_actions(argv);
+run_task();
+run_test()
+
+1.3
+Initializarea thread-ului main se face in thread_init unde TID-ul se aloca prin functia  allocate_tid () care declara static un tid initializat cu 1. Deci thread ul main are tid ul 1 mai apoi urmand ca fiecare thread nou creat sa aiba TID ul incrementat cu 1.
+
+
+2.2
+Am rulat si dupa 3 mesaje printate va intra in panic, din call urile de backtrace am observat ca se intra repetitiv in 3 functii si la final va da crash la un assert  de is_thread. Presupun ca in urma apelurilor repetitive se va suprascrie campul magic in thread care duce la fail ul functiei is_thread. 
